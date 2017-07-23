@@ -1,3 +1,4 @@
+#![feature(specialization)]
 #![warn(missing_docs)]
 
 //! A simple and fast PNG serialization library.
@@ -12,7 +13,7 @@
 //! let (width, height) = (2, 1);
 //!
 //! // Save it!
-//! Png::new(width, height, bytes).save("sollux.png");
+//! Png::from_bytes(width, height, bytes).save("sollux.png");
 //! ```
 
 extern crate bytes;
@@ -20,7 +21,7 @@ extern crate lodepng;
 extern crate framing;
 
 use bytes::Bytes;
-use framing::video::{VideoFrame, Rgba, ChunkyFrame};
+use framing::video::{self, VideoFrame, Rgba, ChunkyFrame};
 use lodepng::ffi::CVec;
 use std::{mem, ptr, slice};
 use std::path::Path;
@@ -85,7 +86,7 @@ impl<T> Png<T> where T: AsRef<[u8]> {
     /// # Panics
     ///
     /// Panics if the buffer's length is not exactly `width * height * 4`.
-    pub fn new(
+    pub fn from_bytes(
         width: usize,
         height: usize,
         buffer: T
@@ -131,22 +132,25 @@ impl<T> Png<T> where T: AsRef<[u8]> {
     }
 }
 
+impl Png<Bytes> {
+    /// Creates a new image from the given frame.
+    ///
+    /// Note that **this function allocates**, since the underlying library,
+    /// `lodepng`, can unfortunately only operate on a contiguous buffer. Maybe
+    /// when I get good enough to write my own encoder, this won't have to
+    /// allocate any memory.
+    pub fn new<T>(frame: T) -> Self
+    where T: VideoFrame + Sync, T::Pixel: Into<Rgba> {
+        ChunkyFrame::new(video::map(|x| x.into(), frame)).into()
+    }
+}
+
 impl From<ChunkyFrame<Rgba>> for Png<Bytes> {
     fn from(frame: ChunkyFrame<Rgba>) -> Self {
         Png {
             width: frame.width(),
             height: frame.height(),
             buffer: frame.bytes()
-        }
-    }
-}
-
-impl<'a> From<&'a ChunkyFrame<Rgba>> for Png<Bytes> {
-    fn from(frame: &'a ChunkyFrame<Rgba>) -> Self {
-        Png {
-            width: frame.width(),
-            height: frame.height(),
-            buffer: frame.bytes().clone()
         }
     }
 }
@@ -224,7 +228,7 @@ fn lossless() {
         Rgba((x % 256) as u8, (y % 256) as u8, 0, 255)
     });
 
-    let png = Png::from(ChunkyFrame::new(ugly_gradient));
+    let png = Png::new(ugly_gradient);
     let recoded = Png::decode(png.encode().unwrap().as_ref()).unwrap();
 
     let before = png.buffer().as_ref();

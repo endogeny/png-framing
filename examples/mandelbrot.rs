@@ -1,28 +1,26 @@
 extern crate framing;
 extern crate png_framing;
 
-use framing::video::{ChunkyFrame, Function, Rgba};
+use framing::video::{Function, Rgba};
 use png_framing::Png;
 
 fn main() {
     let (w, h): (usize, usize) = (7680, 4320);
     let scale = 3.0 / w as f64;
 
-    let image = ChunkyFrame::new(
-        Function::new(w, h, |x, y| {
-            let x = scale * (x as f64) - 2.0;
-            let y = scale * (y as f64 - h as f64 / 2.0);
+    let image = Function::new(w, h, |x, y| {
+        let x = scale * (x as f64) - 2.0;
+        let y = scale * (y as f64 - h as f64 / 2.0);
 
-            if let Some(n) = mandelbrot(x, y) {
-                let lum = (n * 255.0) as u8;
-                Rgba(0, lum, 0, 255)
-            } else {
-                Rgba(0, 0, 0, 255)
-            }
-        })
-    );
+        if let Some(n) = mandelbrot(x, y) {
+            let lum = (n * 255.0) as u8;
+            Rgba(0, lum, 0, 255)
+        } else {
+            Rgba(0, 0, 0, 255)
+        }
+    });
 
-    match Png::from(image).save("mandelbrot.png") {
+    match Png::new(image).save("mandelbrot.png") {
         Ok(_) => println!("Image saved to `mandelbrot.png`!"),
         Err(_) => println!("Could not save image.")
     }
