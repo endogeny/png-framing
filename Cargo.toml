@@ -2,12 +2,12 @@
 name = "png-framing"
 description = "Encoding and decoding PNG images. That's it."
 license = "MIT"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Ram <quadrupleslap@gmail.com>"]
 repository = "https://github.com/endogeny/png-framing"
 documentation = "https://docs.rs/png-framing"
 
 [dependencies]
 bytes = "0.4"
-lodepng = "0.11"
+lodepng = "1.1"
 framing = "0.2"
