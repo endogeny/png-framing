@@ -1,7 +1,7 @@
 #![feature(specialization)]
 #![warn(missing_docs)]
 
-//! A simple and fast PNG serialization library.
+//! A simple PNG serialization library.
 //!
 //! # A (Tiny) Example
 //!
@@ -21,7 +21,7 @@ extern crate lodepng;
 extern crate framing;
 
 use bytes::Bytes;
-use framing::video::{self, VideoFrame, Rgba, ChunkyFrame};
+use framing::{Image, Rgba, ChunkyFrame};
 use lodepng::ffi::CVec;
 use std::{mem, ptr, slice};
 use std::path::Path;
@@ -140,8 +140,8 @@ impl Png<Bytes> {
     /// when I get good enough to write my own encoder, this won't have to
     /// allocate any memory.
     pub fn new<T>(frame: T) -> Self
-    where T: VideoFrame + Sync, T::Pixel: Into<Rgba> {
-        ChunkyFrame::new(video::map(|x| x.into(), frame)).into()
+    where T: Image + Sync, T::Pixel: Into<Rgba> {
+        ChunkyFrame::new(framing::map(|x| x.into(), frame)).into()
     }
 }
 
@@ -167,7 +167,7 @@ impl<T> AsMut<[u8]> for Png<T> where T: AsMut<[u8]> {
     }
 }
 
-impl<T> VideoFrame for Png<T> where T: AsRef<[u8]> {
+impl<T> Image for Png<T> where T: AsRef<[u8]> {
     type Pixel = Rgba;
 
     fn width(&self) -> usize { self.width }
@@ -222,7 +222,7 @@ pub struct Error;
 
 #[test]
 fn lossless() {
-    use framing::video::Function;
+    use framing::Function;
 
     let ugly_gradient = Function::new(1920, 1080, |x, y| {
         Rgba((x % 256) as u8, (y % 256) as u8, 0, 255)

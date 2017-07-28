@@ -1,7 +1,7 @@
 extern crate framing;
 extern crate png_framing;
 
-use framing::video::{Function, Rgba};
+use framing::{Function, Rgba};
 use png_framing::Png;
 
 fn main() {
