@@ -1,8 +1,7 @@
 extern crate framing;
 extern crate png_framing;
 
-use framing::{Function, Rgba};
-use png_framing::Png;
+use framing::{Chunky, Function, Rgba};
 
 fn main() {
     let (w, h): (usize, usize) = (7680, 4320);
@@ -20,7 +19,7 @@ fn main() {
         }
     });
 
-    match Png::new(image).save("mandelbrot.png") {
+    match png_framing::save(&Chunky::new(image), "mandelbrot.png") {
         Ok(_) => println!("Image saved to `mandelbrot.png`!"),
         Err(_) => println!("Could not save image.")
     }

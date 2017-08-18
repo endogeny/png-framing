@@ -1,8 +1,7 @@
 extern crate framing;
 extern crate png_framing;
 
-use framing::{Function, Rgba};
-use png_framing::Png;
+use framing::{Chunky, Function, Rgba};
 
 fn main() {
     let image = Function::new(512, 512, |x, y| {
@@ -19,7 +18,7 @@ fn main() {
         }
     });
 
-    match Png::new(image).save("circle.png") {
+    match png_framing::save(&Chunky::new(image), "circle.png") {
         Ok(_) => println!("Image saved to `circle.png`!"),
         Err(_) => println!("Could not save image.")
     }
