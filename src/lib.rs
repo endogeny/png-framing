@@ -16,12 +16,10 @@
 //! Png::from_bytes(width, height, bytes).save("sollux.png");
 //! ```
 
-extern crate bytes;
 extern crate lodepng;
 extern crate framing;
 
-use bytes::Bytes;
-use framing::{Image, Rgba, ChunkyFrame};
+use framing::{Image, Rgba, Chunky};
 use lodepng::ffi::CVec;
 use std::{mem, ptr, slice};
 use std::path::Path;
@@ -132,7 +130,7 @@ impl<T> Png<T> where T: AsRef<[u8]> {
     }
 }
 
-impl Png<Bytes> {
+impl Png<Vec<u8>> {
     /// Creates a new image from the given frame.
     ///
     /// Note that **this function allocates**, since the underlying library,
@@ -141,16 +139,16 @@ impl Png<Bytes> {
     /// allocate any memory.
     pub fn new<T>(frame: T) -> Self
     where T: Image + Sync, T::Pixel: Into<Rgba> {
-        ChunkyFrame::new(framing::map(|x| x.into(), frame)).into()
+        Chunky::new(framing::map(|x| x.into(), frame)).into()
     }
 }
 
-impl From<ChunkyFrame<Rgba>> for Png<Bytes> {
-    fn from(frame: ChunkyFrame<Rgba>) -> Self {
+impl From<Chunky<Rgba>> for Png<Vec<u8>> {
+    fn from(frame: Chunky<Rgba>) -> Self {
         Png {
             width: frame.width(),
             height: frame.height(),
-            buffer: frame.bytes()
+            buffer: frame.into_bytes()
         }
     }
 }
@@ -231,7 +229,7 @@ fn lossless() {
     let png = Png::new(ugly_gradient);
     let recoded = Png::decode(png.encode().unwrap().as_ref()).unwrap();
 
-    let before = png.buffer().as_ref();
+    let before = png.buffer().as_slice();
     let after  = recoded.buffer().as_ref();
 
     assert_eq!(before, after);
